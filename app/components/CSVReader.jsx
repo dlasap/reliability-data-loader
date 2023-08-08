@@ -175,7 +175,7 @@ const CSVReader = () => {
         </div>
       ) : (
         // response && <CSVTable data={response} />
-        <>Data is ready to be exported</>
+        <>{response && "Data is ready to be exported"}</>
       )}
 
       {file && response && (
