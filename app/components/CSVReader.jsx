@@ -4,10 +4,15 @@ import React, { useEffect, useState } from "react";
 import { apiPostCall } from "../utils/apiCall";
 import Papa from "papaparse";
 import { CSVExporter } from "./CSVExporter";
-import { CSVTable } from "./CSVTable";
 import { replaceValuesInString } from "../utils/utils";
 import { Progress } from "@nextui-org/react";
 const allowedExtensions = ["csv"];
+
+// import { CSVTable } from "./CSVTable";
+
+import dynamic from "next/dynamic";
+
+const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
 
 const CSVReader = () => {
   const [data, setData] = useState([]);
@@ -105,6 +110,7 @@ const CSVReader = () => {
 
   useEffect(() => {
     if (file && !response) getResponse();
+    //eslint-disable-next-line
   }, []);
 
   useEffect(() => {
