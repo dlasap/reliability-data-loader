@@ -23,11 +23,13 @@ const CSVReader = () => {
 
   const [error, setError] = useState("");
   const [file, setFile] = useState("");
+  const [fileName, setFileName] = useState("");
 
   const processParsedData = (data) => {
     const mapped_valid_data = data
       .map((d) => {
         if (!d.Filename || !d.Prompt.trim()) return null;
+        setFileName(d.fileName);
 
         const pattern = /\[(.*?)\]/g;
 
@@ -189,7 +191,7 @@ const CSVReader = () => {
               fontWeight: "600",
             }}
           >
-            <CSVExporter data={response} file_name="Asset List" />
+            <CSVExporter data={response} file_name={availableOutputFileNames[0]} />
           </button>
         </div>
       )}
