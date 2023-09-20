@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { apiPostCall } from "../utils/apiCall";
 import Papa from "papaparse";
 import { CSVExporter } from "./CSVExporter";
@@ -11,6 +11,18 @@ const allowedExtensions = ["csv"];
 // import { CSVTable } from "./CSVTable";
 
 import dynamic from "next/dynamic";
+
+const static_data = `Functions;Failure Modes;Root Causes;Failure Effects;Recommended Tasks
+To provide clean and compressed air to the gas turbine, with a performance standard of maintaining an inlet air temperature below 50°C and a pressure drop across the system below 2% of the total pressure.;Air contamination;Inadequate filtration system;Reduced turbine efficiency, increased wear and tear on turbine components;Regular maintenance and replacement of air filters
+To contain Ambient Air in the system.;Air leakage;Damaged seals or gaskets;Reduced turbine efficiency, increased risk of equipment damage;Regular inspection and replacement of seals and gaskets
+To indicate dp at the control room with an accuracy of 1%.;Incorrect pressure measurement;Faulty pressure sensor;Inaccurate control of turbine operation;Regular calibration and maintenance of pressure sensors
+To indicate ct at the control room with an accuracy of 1%.;Incorrect temperature measurement;Faulty temperature sensor;Inaccurate control of turbine operation;Regular calibration and maintenance of temperature sensors
+To indicate cl at the control room with an accuracy of 1%.;Incorrect level measurement;Faulty level sensor;Inaccurate control of turbine operation;Regular calibration and maintenance of level sensors
+To indicate dp locally with an accuracy of 2%.;Incorrect pressure measurement;Faulty pressure gauge;Inaccurate monitoring of system performance;Regular calibration and maintenance of pressure gauges
+To look acceptable;Visual defects;Worn-out or damaged components;Reduced turbine efficiency, increased risk of equipment damage;Regular inspection and replacement of worn-out or damaged components
+To achieve an economy/efficiency of a minimum efficiency of 99.97% for particles as small as 0.3 micrometers for the system.;Inadequate filtration system;Improper maintenance of filtration system;Reduced turbine efficiency, increased wear and tear on turbine components;Regular maintenance and replacement of filtration system
+To emit no more than None < 78db(A) for the system.;Excessive noise;Faulty noise reduction measures;Increased risk of hearing damage for personnel;Regular inspection and maintenance of noise reduction measures
+To protect personnel from moving parts;Contact with moving parts;Lack of safety guards or barriers;Increased risk of personnel injury;Installation and maintenance of safety guards and barriers`;
 
 const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
 
@@ -24,6 +36,7 @@ const CSVReader = () => {
   const [error, setError] = useState("");
   const [file, setFile] = useState("");
   const [fileName, setFileName] = useState("");
+  const [context, setContext] = useState("");
 
   const processParsedData = (data) => {
     const mapped_valid_data = data
@@ -66,6 +79,9 @@ const CSVReader = () => {
     }
   };
 
+  const handleContextChange = (e) => {
+    setContext(e.target.value);
+  };
   const handleParse = () => {
     if (!file) return setError("Enter a valid file");
 
@@ -99,7 +115,7 @@ const CSVReader = () => {
 
     setAvailableOutputFileNames(uniqueFileNames);
 
-    const params = { prompts: generatedPrompts };
+    const params = { prompts: generatedPrompts, context };
     // const result = await apiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params);
     const result = await apiPostCall("http://localhost:3019/operating_context_prompts", params);
     setIsLoading(false);
@@ -121,6 +137,36 @@ const CSVReader = () => {
 
   return (
     <div style={{ width: "100%" }}>
+      {context}
+      <div
+        style={{
+          background: "yellow",
+          padding: "1rem",
+          borderStyle: "dashed",
+          width: "fit-content",
+          margin: "2rem 0",
+        }}
+      >
+        <div>
+          <label htmlFor="csvInput" style={{ display: "block" }}>
+            Enter Context
+          </label>
+          <input
+            style={{
+              height: "50px",
+              width: "200px",
+              background: "white",
+              color: "black",
+            }}
+            onChange={handleContextChange}
+            value={context}
+            id="csvInput"
+            name="ctx"
+            type="text"
+          />
+        </div>
+      </div>
+
       <div
         style={{
           background: "yellow",

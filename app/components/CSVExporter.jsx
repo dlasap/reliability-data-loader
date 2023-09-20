@@ -12,7 +12,6 @@ export const CSVExporter = ({ data = [], file_name = "" }) => {
   const new_data = data.replace(/;/g, ",").replace(/(\$[,\d]+)(?=(,[,\d]+))/g, (match, p1) => {
     return p1.replace(/,/g, "");
   });
-  //   .replace(/\$(\d{1,3},\d{3}(?=\D|$))/g, '"$1"');
   console.log("%c  new_data:", "color: #0e93e0;background: #aaefe5;", new_data);
   return (
     <>
