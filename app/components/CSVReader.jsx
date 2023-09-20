@@ -137,7 +137,6 @@ const CSVReader = () => {
 
   return (
     <div style={{ width: "100%" }}>
-      {context}
       <div
         style={{
           background: "yellow",
