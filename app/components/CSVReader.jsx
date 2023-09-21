@@ -10,7 +10,7 @@ const allowedExtensions = ["csv"];
 
 // import { CSVTable } from "./CSVTable";
 
-// import dynamic from "next/dynamic";
+import dynamic from "next/dynamic";
 
 const static_data = `Functions;Failure Modes;Root Causes;Failure Effects;Recommended Tasks
 To provide clean and compressed air to the gas turbine, with a performance standard of maintaining an inlet air temperature below 50°C and a pressure drop across the system below 2% of the total pressure.;Air contamination;Inadequate filtration system;Reduced turbine efficiency, increased wear and tear on turbine components;Regular maintenance and replacement of air filters
@@ -24,7 +24,7 @@ To achieve an economy/efficiency of a minimum efficiency of 99.97% for particles
 To emit no more than None < 78db(A) for the system.;Excessive noise;Faulty noise reduction measures;Increased risk of hearing damage for personnel;Regular inspection and maintenance of noise reduction measures
 To protect personnel from moving parts;Contact with moving parts;Lack of safety guards or barriers;Increased risk of personnel injury;Installation and maintenance of safety guards and barriers`;
 
-// const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
+const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
 
 const CSVReader = () => {
   const [data, setData] = useState([]);
