@@ -8,7 +8,7 @@ import { replaceValuesInString } from "../utils/utils";
 import { Progress } from "@nextui-org/react";
 const allowedExtensions = ["csv"];
 
-// import { CSVTable } from "./CSVTable";
+import { CSVTable } from "./CSVTable";
 
 import dynamic from "next/dynamic";
 
@@ -24,7 +24,7 @@ To achieve an economy/efficiency of a minimum efficiency of 99.97% for particles
 To emit no more than None < 78db(A) for the system.;Excessive noise;Faulty noise reduction measures;Increased risk of hearing damage for personnel;Regular inspection and maintenance of noise reduction measures
 To protect personnel from moving parts;Contact with moving parts;Lack of safety guards or barriers;Increased risk of personnel injury;Installation and maintenance of safety guards and barriers`;
 
-const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
+// const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
 
 const CSVReader = () => {
   const [data, setData] = useState([]);
@@ -150,12 +150,14 @@ const CSVReader = () => {
           <label htmlFor="csvInput" style={{ display: "block" }}>
             Enter Context
           </label>
-          <input
+          <textarea
             style={{
-              height: "50px",
-              width: "200px",
+              height: "150px",
+              width: "500px",
               background: "white",
               color: "black",
+              padding: "2px 1px",
+              margin: "0",
             }}
             onChange={handleContextChange}
             value={context}
@@ -203,7 +205,6 @@ const CSVReader = () => {
           )}
         </div>
       </div>
-
       {isLoading ? (
         <div
           style={{
@@ -241,7 +242,6 @@ const CSVReader = () => {
         </div>
       )}
       {/* <div style={{ marginTop: "3rem" }}>{error ? error : data.map((col, idx) => <div key={idx}>{col}</div>)}</div> */}
-      {/* <CSVTable /> */}
     </div>
   );
 };
