@@ -8,9 +8,9 @@ import { replaceValuesInString } from "../utils/utils";
 import { Progress } from "@nextui-org/react";
 const allowedExtensions = ["csv"];
 
-import { CSVTable } from "./CSVTable";
+// import { CSVTable } from "./CSVTable";
 
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 
 const static_data = `Functions;Failure Modes;Root Causes;Failure Effects;Recommended Tasks
 To provide clean and compressed air to the gas turbine, with a performance standard of maintaining an inlet air temperature below 50°C and a pressure drop across the system below 2% of the total pressure.;Air contamination;Inadequate filtration system;Reduced turbine efficiency, increased wear and tear on turbine components;Regular maintenance and replacement of air filters
