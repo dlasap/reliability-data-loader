@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { apiPostCall } from "../utils/apiCall";
+import { apiPostCall, batchApiPostCall } from "../utils/apiCall";
 import Papa from "papaparse";
 import { CSVExporter } from "./CSVExporter";
 import { replaceValuesInString } from "../utils/utils";
@@ -117,7 +117,10 @@ const CSVReader = () => {
 
     const params = { prompts: generatedPrompts, context };
     // const result = await apiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params);
-    const result = await apiPostCall("http://localhost:3019/operating_context_prompts", params);
+    // const result = await apiPostCall("http://localhost:3019/operating_context_prompts", params);
+    // setIsLoading(false);
+
+    const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10);
     setIsLoading(false);
 
     const concat_response = result?.data?.map((d) => d?.response).join(" \n \n");
