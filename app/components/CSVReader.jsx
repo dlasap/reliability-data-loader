@@ -46,9 +46,7 @@ const CSVReader = () => {
   const [fileName, setFileName] = useState("");
   const [context, setContext] = useState("");
 
-  const [isSessionRetained, setIsSessionRetained] = useState(
-    getIsPersistemItem("isPersisted") ? JSON.parse(getIsPersistemItem("isPersisted")) : false
-  ); // eslint-disable-line
+  const [isSessionRetained, setIsSessionRetained] = useState(false); // eslint-disable-line
 
   const processParsedData = (data) => {
     const mapped_valid_data = data
@@ -145,6 +143,11 @@ const CSVReader = () => {
 
   useEffect(() => {
     if (file && !response) getResponse();
+    if (JSON.parse(getIsPersistemItem("isPersisted")) !== null) {
+      const isPersisted = JSON.parse(getIsPersistemItem("isPersisted"));
+      console.log("%c  isPersisted:", "color: #0e93e0;background: #aaefe5;", isPersisted);
+      setIsSessionRetained(isPersisted);
+    }
     //eslint-disable-next-line
   }, []);
 
@@ -222,6 +225,11 @@ const CSVReader = () => {
             id="csvInput"
             name="ctx"
             type="text"
+            onBlur={() => {
+              if (isSessionRetained) {
+                setContextItem(context);
+              }
+            }}
           />
         </div>
       </div>
