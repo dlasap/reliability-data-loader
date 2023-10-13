@@ -6,11 +6,16 @@ import Papa from "papaparse";
 import { CSVExporter } from "./CSVExporter";
 import { replaceValuesInString } from "../utils/utils";
 import { Progress } from "@nextui-org/react";
+import { useSessionStorage } from "../hooks/useSessionStorage";
+
+import Switch from "@mui/material/Switch";
+
 const allowedExtensions = ["csv"];
 
 // import { CSVTable } from "./CSVTable";
 
 import dynamic from "next/dynamic";
+import { FormControlLabel, FormGroup } from "@mui/material";
 
 const static_data = `Functions;Failure Modes;Root Causes;Failure Effects;Recommended Tasks
 To provide clean and compressed air to the gas turbine, with a performance standard of maintaining an inlet air temperature below 50°C and a pressure drop across the system below 2% of the total pressure.;Air contamination;Inadequate filtration system;Reduced turbine efficiency, increased wear and tear on turbine components;Regular maintenance and replacement of air filters
@@ -27,6 +32,9 @@ To protect personnel from moving parts;Contact with moving parts;Lack of safety 
 const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
 
 const CSVReader = () => {
+  const { setItem: setContextItem, getItem: getContextItem, removeItem: removeContextItem } = useSessionStorage("contextStorage");
+  const { setItem: setIsPersisted, getItem: getIsPersistemItem, removeItem: removePersistedItem } = useSessionStorage("isPersisted");
+
   const [data, setData] = useState([]);
   const [response, setResponse] = useState("");
   const [fileData, setFileData] = useState([]);
@@ -37,6 +45,7 @@ const CSVReader = () => {
   const [file, setFile] = useState("");
   const [fileName, setFileName] = useState("");
   const [context, setContext] = useState("");
+  const [isSessionRetained, setIsSessionRetained] = useState(JSON.parse(getIsPersistemItem("isPersisted")));
 
   const processParsedData = (data) => {
     const mapped_valid_data = data
@@ -126,6 +135,8 @@ const CSVReader = () => {
     const concat_response = result?.data?.map((d) => d?.response).join(" \n \n");
     console.log("%c  concat_response:", "color: #0e93e0;background: #aaefe5;", concat_response);
 
+    setContextItem(concat_response);
+
     setResponse(concat_response);
   };
 
@@ -135,11 +146,52 @@ const CSVReader = () => {
   }, []);
 
   useEffect(() => {
-    console.log("X", availableOutputFileNames);
+    console.log("Output Names", availableOutputFileNames);
   }, [availableOutputFileNames]);
+
+  useEffect(() => {
+    if (!context) {
+      const storageContext = JSON.parse(getContextItem("contextStorage"));
+      setContext(storageContext);
+    }
+    if (!JSON.parse(getIsPersistemItem("isPersisted"))) {
+      removeContextItem("contextStorage");
+    } else {
+      const storageContext = JSON.parse(getContextItem("contextStorage"));
+      setContext(storageContext);
+      if (context) {
+        setContextItem(context);
+      }
+    }
+  }, [isSessionRetained, response]);
 
   return (
     <div style={{ width: "100%" }}>
+      <div
+        style={{
+          background: "yellow",
+          padding: "1rem",
+          borderStyle: "dashed",
+          width: "fit-content",
+          margin: "2rem 0",
+        }}
+      >
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={isSessionRetained}
+                onChange={() => {
+                  setIsSessionRetained((prev) => !prev);
+                  setIsPersisted(!isSessionRetained);
+                }}
+              />
+            }
+            label="Retain Session"
+          />
+        </FormGroup>
+      </div>
+
       <div
         style={{
           background: "yellow",
@@ -183,6 +235,7 @@ const CSVReader = () => {
           <label htmlFor="csvInput" style={{ display: "block" }}>
             Enter CSV File
           </label>
+
           <input onChange={handleFileChange} id="csvInput" name="file" type="File" />
           {file && (
             <div
@@ -192,6 +245,7 @@ const CSVReader = () => {
               }}
             >
               <button
+                disabled={isLoading}
                 style={{
                   background: "orange",
                   color: "white",
@@ -226,10 +280,10 @@ const CSVReader = () => {
         </div>
       ) : (
         // response && <CSVTable data={response} />
-        <>{response && "Data is ready to be exported"}</>
+        <>{response && !isLoading && "Data is ready to be exported"}</>
       )}
 
-      {file && response && (
+      {file && response && !isLoading && (
         <div style={{}}>
           <button
             style={{
