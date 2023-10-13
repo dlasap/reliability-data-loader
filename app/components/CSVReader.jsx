@@ -45,7 +45,10 @@ const CSVReader = () => {
   const [file, setFile] = useState("");
   const [fileName, setFileName] = useState("");
   const [context, setContext] = useState("");
-  const [isSessionRetained, setIsSessionRetained] = useState(JSON.parse(getIsPersistemItem("isPersisted")));
+
+  const [isSessionRetained, setIsSessionRetained] = useState(
+    getIsPersistemItem("isPersisted") ? JSON.parse(getIsPersistemItem("isPersisted")) : false
+  ); // eslint-disable-line
 
   const processParsedData = (data) => {
     const mapped_valid_data = data
@@ -163,7 +166,7 @@ const CSVReader = () => {
         setContextItem(context);
       }
     }
-  }, [isSessionRetained, response]);
+  }, [isSessionRetained, response]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ width: "100%" }}>

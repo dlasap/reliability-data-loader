@@ -1,8 +1,6 @@
 import styles from "./page.module.css";
 import DataLoader from "./components/DataLoader";
 
-import dynamic from "next/dynamic";
-
 export default function Home() {
   return (
     <main className={styles.main}>
