@@ -134,9 +134,9 @@ const CSVReader = () => {
     setIsLoading(false);
 
     const concat_response = result?.data?.map((d) => d?.response).join(" \n \n");
-    console.log("%c  concat_response:", "color: #0e93e0;background: #aaefe5;", concat_response);
+    console.log("%c  concat_response:", "color: #0e93e0;background: #aaefe5;", concat_response.length);
 
-    setContextItem(concat_response);
+    // setContextItem(concat_response);
 
     setResponse(concat_response);
   };
@@ -209,7 +209,7 @@ const CSVReader = () => {
       >
         <div>
           <label htmlFor="csvInput" style={{ display: "block" }}>
-            Enter Context
+            Enter System Context
           </label>
           <textarea
             style={{

@@ -30,6 +30,7 @@ export const batchApiPostCall = async (url = "", params, batchSize = 10) => {
     }
 
     const allData = await Promise.map(paramsBatches, async (batch) => {
+      const { context = "" } = params;
       console.log("%c  batch:", "color: #0e93e0;background: #aaefe5;", batch);
       const {
         data: result,
@@ -37,6 +38,7 @@ export const batchApiPostCall = async (url = "", params, batchSize = 10) => {
         message,
       } = await axios.post(url, {
         prompts: batch.flat() ?? [],
+        ...(context ? { context: [context] } : {}),
       });
 
       console.log("%c  url:", "color: #0e93e0;background: #aaefe5;", url);
