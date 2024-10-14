@@ -130,7 +130,9 @@ const CSVReader = () => {
     // const result = await apiPostCall("http://localhost:3019/operating_context_prompts", params);
     // setIsLoading(false);
 
-    const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10);
+    // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10);
+    const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params, 10);
+
     setIsLoading(false);
 
     const concat_response = result?.data?.map((d) => d?.response).join(" \n \n");
