@@ -282,7 +282,7 @@ const CSVReader = () => {
               >
                 {AI_MODELS_OPTIONS.map((AMO) => {
                   return (
-                    <option id={AMO.id} value={AMO.model}>
+                    <option id={AMO.id} value={AMO.model} key={AMO.id}>
                       {AMO.model}
                     </option>
                   );
