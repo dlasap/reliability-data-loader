@@ -18,7 +18,7 @@ export const apiPostCall = async (url = "", params) => {
   }
 };
 
-export const batchApiPostCall = async (url = "", params, batchSize = 10) => {
+export const batchApiPostCall = async (url = "", params, batchSize = 10, AI_SETTINGS) => {
   try {
     let paramsBatches = [];
 
@@ -39,6 +39,7 @@ export const batchApiPostCall = async (url = "", params, batchSize = 10) => {
       } = await axios.post(url, {
         prompts: batch.flat() ?? [],
         ...(context ? { context: [context] } : {}),
+        ...(AI_SETTINGS ? { settings: AI_SETTINGS } : {}),
       });
 
       console.log("%c  url:", "color: #0e93e0;background: #aaefe5;", url);

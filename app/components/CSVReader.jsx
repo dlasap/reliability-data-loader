@@ -7,12 +7,14 @@ import { CSVExporter } from "./CSVExporter";
 import { replaceValuesInString } from "../utils/utils";
 import { Progress } from "@nextui-org/react";
 import { useSessionStorage } from "../hooks/useSessionStorage";
+import { AI_MODELS_OPTIONS } from "../constants/constants";
+console.log("%c  AI_MODELS_OPTIONS:", "color: #0e93e0;background: #aaefe5;", AI_MODELS_OPTIONS);
 
 import Switch from "@mui/material/Switch";
 
 const allowedExtensions = ["csv"];
 
-// import { CSVTable } from "./CSVTable";
+import aiModels from "../constants/ai-models";
 
 import dynamic from "next/dynamic";
 import { FormControlLabel, FormGroup } from "@mui/material";
@@ -45,6 +47,8 @@ const CSVReader = () => {
   const [file, setFile] = useState("");
   const [fileName, setFileName] = useState("");
   const [context, setContext] = useState("");
+  const [aiSettings, setAisettings] = useState({ temperature: 0, model: aiModels.gpt4o, frequency_penalty: 0.5, presence_penalty: 0.5 });
+  console.log("%c  aiSettings:", "color: #0e93e0;background: #aaefe5;", aiSettings);
 
   const [isSessionRetained, setIsSessionRetained] = useState(false); // eslint-disable-line
 
@@ -130,8 +134,8 @@ const CSVReader = () => {
     // const result = await apiPostCall("http://localhost:3019/operating_context_prompts", params);
     // setIsLoading(false);
 
-    // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10);
-    const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params, 10);
+    // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10, aiSettings);
+    const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params, 10, aiSettings);
 
     setIsLoading(false);
 
@@ -141,6 +145,15 @@ const CSVReader = () => {
     // setContextItem(concat_response);
 
     setResponse(concat_response);
+  };
+
+  const handleChangeAISettings = (key, value) => {
+    setAisettings((prev) => {
+      return {
+        ...prev,
+        [key]: value,
+      };
+    });
   };
 
   useEffect(() => {
@@ -177,27 +190,199 @@ const CSVReader = () => {
     <div style={{ width: "100%" }}>
       <div
         style={{
-          background: "yellow",
-          padding: "1rem",
-          borderStyle: "dashed",
-          width: "fit-content",
-          margin: "2rem 0",
+          display: "flex",
+          gap: "2rem",
         }}
       >
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={isSessionRetained}
-                onChange={() => {
-                  setIsSessionRetained((prev) => !prev);
-                  setIsPersisted(!isSessionRetained);
+        <div
+          style={{
+            background: "yellow",
+            padding: "1rem",
+            borderStyle: "dashed",
+            borderColor: "orange",
+            width: "fit-content",
+            margin: "2rem 0",
+          }}
+        >
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={isSessionRetained}
+                  onChange={() => {
+                    setIsSessionRetained((prev) => !prev);
+                    setIsPersisted(!isSessionRetained);
+                  }}
+                />
+              }
+              label="Retain Session"
+            />
+          </FormGroup>
+        </div>
+
+        <div
+          style={{
+            background: "yellow",
+            padding: "1rem",
+            borderStyle: "dashed",
+            borderColor: "orange",
+            width: "fit-content",
+            margin: "2rem",
+          }}
+        >
+          <label
+            style={{
+              color: "black",
+              fontSize: "18px",
+              fontWeight: 700,
+            }}
+          >
+            AI Settings
+          </label>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "1rem",
+              marginTop: "1rem",
+            }}
+          >
+            {/* emperature: 0, model: aiModels.gpt4, frequency_penalty: 0.5, presence_penalty: 0.5 */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "5px",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <label
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
                 }}
+                for="ai-model"
+              >
+                AI Model
+              </label>
+
+              <select
+                name="ai-model"
+                id="ai-model"
+                onChange={(e) => {
+                  handleChangeAISettings("model", e.target.value);
+                }}
+                style={{
+                  width: "100px",
+                  backgroundColor: "white",
+                  color: "black",
+                }}
+                defaultValue={aiModels.gpt4o}
+              >
+                {AI_MODELS_OPTIONS.map((AMO) => {
+                  return (
+                    <option id={AMO.id} value={AMO.model}>
+                      {AMO.model}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "5px",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <label
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Temperature
+              </label>
+
+              <input
+                style={{
+                  width: "50px",
+                  backgroundColor: "white",
+                  color: "black",
+                }}
+                type="number"
+                value={aiSettings.temperature}
+                step={0.1}
+                onChange={(e) => handleChangeAISettings("temperature", e.target.value)}
               />
-            }
-            label="Retain Session"
-          />
-        </FormGroup>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "5px",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <label
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Frequency Penalty
+              </label>
+              <input
+                style={{
+                  width: "50px",
+                  backgroundColor: "white",
+                  color: "black",
+                }}
+                type="number"
+                value={aiSettings.frequency_penalty}
+                step={0.1}
+                onChange={(e) => handleChangeAISettings("frequency_penalty", e.target.value)}
+              />
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "5px",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <label
+                style={{
+                  fontSize: "14px",
+                  fontWeight: 600,
+                }}
+              >
+                Presence Penalty
+              </label>
+
+              <input
+                style={{
+                  width: "50px",
+                  backgroundColor: "white",
+                  color: "black",
+                }}
+                type="number"
+                value={aiSettings.presence_penalty}
+                step={0.1}
+                onChange={(e) => handleChangeAISettings("presence_penalty", e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div
@@ -205,6 +390,7 @@ const CSVReader = () => {
           background: "yellow",
           padding: "1rem",
           borderStyle: "dashed",
+          borderColor: "orange",
           width: "fit-content",
           margin: "2rem 0",
         }}
@@ -241,6 +427,7 @@ const CSVReader = () => {
           background: "yellow",
           padding: "1rem",
           borderStyle: "dashed",
+          borderColor: "orange",
           width: "fit-content",
         }}
       >
@@ -275,6 +462,33 @@ const CSVReader = () => {
           )}
         </div>
       </div>
+
+      {/* COMING SOON FILE SUPPORT */}
+      <div
+        style={{
+          background: "gray",
+          padding: "1rem",
+          borderStyle: "dashed",
+          borderColor: "orange",
+          width: "fit-content",
+          marginTop: "2rem",
+          marginBottom: "2rem",
+        }}
+      >
+        <div>
+          <label htmlFor="addtlFileSupport">Addition File Support</label>
+
+          <div
+            style={{
+              fontStyle: "italic",
+              marginTop: "1rem",
+            }}
+          >
+            COMING SOON...
+          </div>
+        </div>
+      </div>
+
       {isLoading ? (
         <div
           style={{
@@ -293,7 +507,14 @@ const CSVReader = () => {
         </div>
       ) : (
         // response && <CSVTable data={response} />
-        <>{response && !isLoading && "Data is ready to be exported"}</>
+        <label
+          style={{
+            color: "white",
+            fontWeight: 600,
+          }}
+        >
+          {response && !isLoading && "Data is ready to be exported"}
+        </label>
       )}
 
       {file && response && !isLoading && (
@@ -305,6 +526,7 @@ const CSVReader = () => {
               padding: "0.5rem",
               border: "2px solid white",
               fontWeight: "600",
+              marginTop: "0.5rem",
             }}
           >
             <CSVExporter data={response} file_name={availableOutputFileNames[0]} />
