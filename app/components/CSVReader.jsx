@@ -505,7 +505,7 @@ const CSVReader = () => {
       </div>
 
       {/* COMING SOON FILE SUPPORT */}
-      <div
+      {/* <div
         style={{
           background: "yellow",
           padding: "1rem",
@@ -521,7 +521,7 @@ const CSVReader = () => {
         </label>
 
         <input onChange={handleSupportFileChange} id="supportFileInput" name="support_file" type="File" />
-      </div>
+      </div> */}
 
       {isLoading ? (
         <div
