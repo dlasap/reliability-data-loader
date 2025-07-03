@@ -177,7 +177,8 @@ const CSVReader = () => {
 
       // const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", formData);
       // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10, aiSettings);
-      const result = await batchApiPostCall("https://reliability-management-backend-hat5c54f9.vercel.app/operating_context_prompts", formData);
+      // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", formData);
+      const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", formData);
 
       setResponse(result?.data?.map((d) => d?.response).join("\n\n"));
     } catch (error) {
