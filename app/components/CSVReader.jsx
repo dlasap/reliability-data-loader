@@ -45,10 +45,11 @@ const CSVReader = () => {
 
   const [error, setError] = useState("");
   const [file, setFile] = useState("");
+  const [supportFile, setSupportFile] = useState("");
+
   const [fileName, setFileName] = useState("");
   const [context, setContext] = useState("");
   const [aiSettings, setAisettings] = useState({ temperature: 0, model: aiModels.gpt4o, frequency_penalty: 0.5, presence_penalty: 0.5 });
-  console.log("%c  aiSettings:", "color: #0e93e0;background: #aaefe5;", aiSettings);
 
   const [isSessionRetained, setIsSessionRetained] = useState(false); // eslint-disable-line
 
@@ -93,6 +94,24 @@ const CSVReader = () => {
     }
   };
 
+  const handleSupportFileChange = (e) => {
+    setError("");
+
+    // Check if user has entered the file
+    if (e.target.files.length) {
+      const inputFile = e.target.files[0];
+
+      // const fileExtension = inputFile?.type.split("/")[1];
+      // if (!allowedExtensions.includes(fileExtension)) {
+      //   setError("Please input a csv file");
+      //   return;
+      // }
+
+      // If input type is correct set the state
+      setSupportFile(inputFile);
+    }
+  };
+
   const handleContextChange = (e) => {
     setContext(e.target.value);
   };
@@ -115,36 +134,58 @@ const CSVReader = () => {
     reader.readAsText(file);
   };
 
+  // const getResponse = async (processedData) => {
+  //   setIsLoading(true);
+  //   const generatedPrompts = processedData.map((pd) => pd.Prompt);
+
+  //   let uniqueFileNames = [];
+  //   processedData?.map((pd) => {
+  //     if (!uniqueFileNames.includes(pd.Filename)) {
+  //       uniqueFileNames.push(pd.Filename);
+  //     }
+  //   });
+
+  //   setAvailableOutputFileNames(uniqueFileNames);
+
+  //   const params = { prompts: generatedPrompts, context };
+  //   // const result = await apiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params);
+  //   // const result = await apiPostCall("http://localhost:3019/operating_context_prompts", params);
+  //   // setIsLoading(false);
+
+  //   // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10, aiSettings);
+  //   const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params, 10, aiSettings);
+
+  //   setIsLoading(false);
+
+  //   const concat_response = result?.data?.map((d) => d?.response).join(" \n \n");
+  //   console.log("%c  concat_response:", "color: #0e93e0;background: #aaefe5;", concat_response.length);
+
+  //   // setContextItem(concat_response);
+
+  //   setResponse(concat_response);
+  // };
+
   const getResponse = async (processedData) => {
-    setIsLoading(true);
-    const generatedPrompts = processedData.map((pd) => pd.Prompt);
-    console.log("%c  generatedPrompts:", "color: #0e93e0;background: #aaefe5;", generatedPrompts);
+    try {
+      setIsLoading(true);
+      const formData = new FormData();
+      formData.append("context", context);
+      formData.append("aiSettings", JSON.stringify(aiSettings));
+      formData.append("prompts", JSON.stringify(processedData?.map((pd) => pd.Prompt)));
+      formData.append("supportFile", supportFile);
+      formData.append("batchSize", 10);
 
-    let uniqueFileNames = [];
-    processedData?.map((pd) => {
-      if (!uniqueFileNames.includes(pd.Filename)) {
-        uniqueFileNames.push(pd.Filename);
-      }
-    });
+      // const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", formData);
+      // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10, aiSettings);
+      const result = await batchApiPostCall("https://reliability-management-backend-hat5c54f9.vercel.app/operating_context_prompts", formData);
 
-    setAvailableOutputFileNames(uniqueFileNames);
-
-    const params = { prompts: generatedPrompts, context };
-    // const result = await apiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params);
-    // const result = await apiPostCall("http://localhost:3019/operating_context_prompts", params);
-    // setIsLoading(false);
-
-    // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10, aiSettings);
-    const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", params, 10, aiSettings);
-
-    setIsLoading(false);
-
-    const concat_response = result?.data?.map((d) => d?.response).join(" \n \n");
-    console.log("%c  concat_response:", "color: #0e93e0;background: #aaefe5;", concat_response.length);
-
-    // setContextItem(concat_response);
-
-    setResponse(concat_response);
+      setResponse(result?.data?.map((d) => d?.response).join("\n\n"));
+    } catch (error) {
+      console.log("%c  error:", "color: #0e93e0;background: #aaefe5;", error);
+      setError(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChangeAISettings = (key, value) => {
@@ -157,7 +198,7 @@ const CSVReader = () => {
   };
 
   useEffect(() => {
-    if (file && !response) getResponse();
+    if (file && supportFile && !response) getResponse();
     if (JSON.parse(getIsPersistemItem("isPersisted")) !== null) {
       const isPersisted = JSON.parse(getIsPersistemItem("isPersisted"));
       console.log("%c  isPersisted:", "color: #0e93e0;background: #aaefe5;", isPersisted);
@@ -464,9 +505,9 @@ const CSVReader = () => {
       </div>
 
       {/* COMING SOON FILE SUPPORT */}
-      <div
+      {/* <div
         style={{
-          background: "gray",
+          background: "yellow",
           padding: "1rem",
           borderStyle: "dashed",
           borderColor: "orange",
@@ -475,19 +516,12 @@ const CSVReader = () => {
           marginBottom: "2rem",
         }}
       >
-        <div>
-          <label htmlFor="addtlFileSupport">Addition File Support</label>
+        <label htmlFor="supportFileInput" style={{ display: "block" }}>
+          Upload Support file
+        </label>
 
-          <div
-            style={{
-              fontStyle: "italic",
-              marginTop: "1rem",
-            }}
-          >
-            COMING SOON...
-          </div>
-        </div>
-      </div>
+        <input onChange={handleSupportFileChange} id="supportFileInput" name="support_file" type="File" />
+      </div> */}
 
       {isLoading ? (
         <div
@@ -534,6 +568,12 @@ const CSVReader = () => {
         </div>
       )}
       {/* <div style={{ marginTop: "3rem" }}>{error ? error : data.map((col, idx) => <div key={idx}>{col}</div>)}</div> */}
+      {error ?? (
+        <div>
+          <label>GENERATION ERROR:</label>
+          {error}
+        </div>
+      )}
     </div>
   );
 };

@@ -47,6 +47,11 @@
   margin: 0;
 }
 
+/* CSS CONSOLE LOG */
+/* *, *::after, *::before{
+  outline: 5px solid lime;
+} */
+
 html,
 body {
   max-width: 100vw;
