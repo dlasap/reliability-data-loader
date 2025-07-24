@@ -8,7 +8,6 @@ import { replaceValuesInString } from "../utils/utils";
 import { Progress } from "@nextui-org/react";
 import { useSessionStorage } from "../hooks/useSessionStorage";
 import { AI_MODELS_OPTIONS } from "../constants/constants";
-console.log("%c  AI_MODELS_OPTIONS:", "color: #0e93e0;background: #aaefe5;", AI_MODELS_OPTIONS);
 
 import Switch from "@mui/material/Switch";
 
@@ -207,10 +206,6 @@ const CSVReader = () => {
     }
     //eslint-disable-next-line
   }, []);
-
-  useEffect(() => {
-    console.log("Output Names", availableOutputFileNames);
-  }, [availableOutputFileNames]);
 
   useEffect(() => {
     if (!context) {
@@ -553,19 +548,17 @@ const CSVReader = () => {
       )}
 
       {file && response && !isLoading && (
-        <div style={{}}>
-          <button
-            style={{
-              background: "orange",
-              color: "white",
-              padding: "0.5rem",
-              border: "2px solid white",
-              fontWeight: "600",
-              marginTop: "0.5rem",
-            }}
-          >
-            <CSVExporter data={response} file_name={availableOutputFileNames[0]} />
-          </button>
+        <div
+          style={{
+            marginTop: "3rem",
+            maxWidth: "300px",
+            backgroundColor: "yellow",
+            padding: "4px",
+            borderRadius: "5px",
+            border: "1px dashed orange",
+          }}
+        >
+          <CSVExporter data={response} file_name={availableOutputFileNames[0]} />
         </div>
       )}
       {/* <div style={{ marginTop: "3rem" }}>{error ? error : data.map((col, idx) => <div key={idx}>{col}</div>)}</div> */}
