@@ -9,9 +9,11 @@ import { Progress } from "@nextui-org/react";
 import { useSessionStorage } from "../hooks/useSessionStorage";
 import { AI_MODELS_OPTIONS } from "../constants/constants";
 
+import * as XLSX from "xlsx";
+
 import Switch from "@mui/material/Switch";
 
-const allowedExtensions = ["csv"];
+const allowedExtensions = ["csv", "xlsx", "xls"];
 
 import aiModels from "../constants/ai-models";
 
@@ -33,8 +35,16 @@ To protect personnel from moving parts;Contact with moving parts;Lack of safety 
 const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
 
 const CSVReader = () => {
-  const { setItem: setContextItem, getItem: getContextItem, removeItem: removeContextItem } = useSessionStorage("contextStorage");
-  const { setItem: setIsPersisted, getItem: getIsPersistemItem, removeItem: removePersistedItem } = useSessionStorage("isPersisted");
+  const {
+    setItem: setContextItem,
+    getItem: getContextItem,
+    removeItem: removeContextItem,
+  } = useSessionStorage("contextStorage");
+  const {
+    setItem: setIsPersisted,
+    getItem: getIsPersistemItem,
+    removeItem: removePersistedItem,
+  } = useSessionStorage("isPersisted");
 
   const [data, setData] = useState([]);
   const [response, setResponse] = useState("");
@@ -48,7 +58,12 @@ const CSVReader = () => {
 
   const [fileName, setFileName] = useState("");
   const [context, setContext] = useState("");
-  const [aiSettings, setAisettings] = useState({ temperature: 0, model: aiModels.gpt4o, frequency_penalty: 0.5, presence_penalty: 0.5 });
+  const [aiSettings, setAisettings] = useState({
+    temperature: 0,
+    model: aiModels.gpt4o,
+    frequency_penalty: 0.5,
+    presence_penalty: 0.5,
+  });
 
   const [isSessionRetained, setIsSessionRetained] = useState(false); // eslint-disable-line
 
@@ -61,9 +76,16 @@ const CSVReader = () => {
         const pattern = /\[(.*?)\]/g;
 
         const variables = d.Prompt.match(pattern);
-        const input_variables = variables.map((variable) => variable.slice(1, -1));
+        const input_variables = variables.map((variable) =>
+          variable.slice(1, -1)
+        );
 
-        let outputStr = replaceValuesInString(d.Prompt, variables, d, input_variables);
+        let outputStr = replaceValuesInString(
+          d.Prompt,
+          variables,
+          d,
+          input_variables
+        );
 
         return {
           ...d,
@@ -78,19 +100,21 @@ const CSVReader = () => {
   const handleFileChange = (e) => {
     setError("");
 
-    // Check if user has entered the file
-    if (e.target.files.length) {
-      const inputFile = e.target.files[0];
-
-      const fileExtension = inputFile?.type.split("/")[1];
-      if (!allowedExtensions.includes(fileExtension)) {
-        setError("Please input a csv file");
-        return;
-      }
-
-      // If input type is correct set the state
-      setFile(inputFile);
+    const inputFile = e.target.files?.[0];
+    if (!inputFile) {
+      setError("No file selected.");
+      return;
     }
+
+    const fileName = inputFile.name;
+    const fileExtension = fileName.split(".").pop()?.toLowerCase();
+
+    if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
+      setError("Please upload a CSV or Excel file (.csv, .xlsx, .xls)");
+      return;
+    }
+
+    setFile(inputFile);
   };
 
   const handleSupportFileChange = (e) => {
@@ -111,26 +135,97 @@ const CSVReader = () => {
     }
   };
 
+  function extractTableFromXLSX(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const binaryStr = e.target?.result;
+        const workbook = XLSX.read(binaryStr, { type: "binary" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+        // 🔍 Find the row that includes "Prompt" and "Inp1"
+        const headerIndex = rows.findIndex((row) =>
+          row.some((cell) => typeof cell === "string" && /prompt/i.test(cell))
+        );
+
+        if (headerIndex === -1) return reject("Header not found");
+
+        const headers = rows[headerIndex];
+        const dataRows = rows.slice(headerIndex + 1);
+
+        const tableData = dataRows.map((row) =>
+          Object.fromEntries(headers.map((h, i) => [h || `col${i}`, row[i]]))
+        );
+
+        resolve(tableData);
+      };
+
+      reader.onerror = reject;
+      reader.readAsBinaryString(file);
+    });
+  }
+
   const handleContextChange = (e) => {
     setContext(e.target.value);
   };
+  // const handleParse = () => {
+  //   if (!file) return setError("Enter a valid file");
+
+  //   const reader = new FileReader();
+
+  //   reader.onload = async ({ target }) => {
+  //     const csv = Papa.parse(target.result, { header: true });
+  //     const parsedData = csv?.data;
+  //     const processedData = processParsedData(parsedData);
+
+  //     setFileData(parsedData);
+
+  //     const AIPromptResults = await getResponse(processedData);
+
+  //     const columns = Object.keys(parsedData[0]);
+  //     setData(columns);
+  //   };
+  //   reader.readAsText(file);
+  // };
+
   const handleParse = () => {
     if (!file) return setError("Enter a valid file");
 
     const reader = new FileReader();
 
-    reader.onload = async ({ target }) => {
-      const csv = Papa.parse(target.result, { header: true });
-      const parsedData = csv?.data;
-      const processedData = processParsedData(parsedData);
-      setFileData(parsedData);
+    reader.onload = async (e) => {
+      const binaryStr = e.target?.result;
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
 
-      const AIPromptResults = await getResponse(processedData);
+      // Get first sheet name
+      const sheetName = workbook.SheetNames[0];
+      // Get data from first sheet
+      const sheet = workbook.Sheets[sheetName];
+      // const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: "" }); // defval prevents undefined values
 
-      const columns = Object.keys(parsedData[0]);
-      setData(columns);
+      const jsonData = XLSX.utils.sheet_to_json(sheet, {
+        header: 1, // read raw rows as arrays
+        defval: "",
+      });
+      const headers = jsonData[0]; // pick second row as headers
+      const rows = jsonData.slice(1);
+
+      // const data = rows.map((row: any[]) =>
+      //   Object.fromEntries(headers.map((h: any, i: number) => [h || `col${i}`, row[i]]))
+      // );
+
+      const data = await extractTableFromXLSX(file);
+      console.log("[CONSOLE INFO] :  ~ handleFileUpload ~ data:", data);
+      const AIPromptResults = await getResponse(data);
+
+      setFileData(data);
+      // setData(jsonData);
+      setData(data);
     };
-    reader.readAsText(file);
+
+    reader.readAsBinaryString(file);
   };
 
   // const getResponse = async (processedData) => {
@@ -170,14 +265,20 @@ const CSVReader = () => {
       const formData = new FormData();
       formData.append("context", context);
       formData.append("aiSettings", JSON.stringify(aiSettings));
-      formData.append("prompts", JSON.stringify(processedData?.map((pd) => pd.Prompt)));
+      formData.append(
+        "prompts",
+        JSON.stringify(processedData?.map((pd) => pd.Prompt))
+      );
       formData.append("supportFile", supportFile);
       formData.append("batchSize", 10);
 
       // const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", formData);
       // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10, aiSettings);
       // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", formData);
-      const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", formData);
+      const result = await batchApiPostCall(
+        "https://reliability-management-backend-five.vercel.app/operating_context_prompts",
+        formData
+      );
 
       setResponse(result?.data?.map((d) => d?.response).join("\n\n"));
     } catch (error) {
@@ -201,7 +302,11 @@ const CSVReader = () => {
     if (file && supportFile && !response) getResponse();
     if (JSON.parse(getIsPersistemItem("isPersisted")) !== null) {
       const isPersisted = JSON.parse(getIsPersistemItem("isPersisted"));
-      console.log("%c  isPersisted:", "color: #0e93e0;background: #aaefe5;", isPersisted);
+      console.log(
+        "%c  isPersisted:",
+        "color: #0e93e0;background: #aaefe5;",
+        isPersisted
+      );
       setIsSessionRetained(isPersisted);
     }
     //eslint-disable-next-line
@@ -299,7 +404,7 @@ const CSVReader = () => {
                   fontSize: "14px",
                   fontWeight: 600,
                 }}
-                for="ai-model"
+                htmlFor="ai-model"
               >
                 AI Model
               </label>
@@ -354,7 +459,9 @@ const CSVReader = () => {
                 type="number"
                 value={aiSettings.temperature}
                 step={0.1}
-                onChange={(e) => handleChangeAISettings("temperature", e.target.value)}
+                onChange={(e) =>
+                  handleChangeAISettings("temperature", e.target.value)
+                }
               />
             </div>
 
@@ -384,7 +491,9 @@ const CSVReader = () => {
                 type="number"
                 value={aiSettings.frequency_penalty}
                 step={0.1}
-                onChange={(e) => handleChangeAISettings("frequency_penalty", e.target.value)}
+                onChange={(e) =>
+                  handleChangeAISettings("frequency_penalty", e.target.value)
+                }
               />
             </div>
 
@@ -415,7 +524,9 @@ const CSVReader = () => {
                 type="number"
                 value={aiSettings.presence_penalty}
                 step={0.1}
-                onChange={(e) => handleChangeAISettings("presence_penalty", e.target.value)}
+                onChange={(e) =>
+                  handleChangeAISettings("presence_penalty", e.target.value)
+                }
               />
             </div>
           </div>
@@ -446,7 +557,7 @@ const CSVReader = () => {
               margin: "0",
             }}
             onChange={handleContextChange}
-            value={context}
+            value={context ?? ""}
             id="csvInput"
             name="ctx"
             type="text"
@@ -470,10 +581,15 @@ const CSVReader = () => {
       >
         <div>
           <label htmlFor="csvInput" style={{ display: "block" }}>
-            Enter CSV File
+            Enter XLSX File
           </label>
 
-          <input onChange={handleFileChange} id="csvInput" name="file" type="File" />
+          <input
+            onChange={handleFileChange}
+            id="csvInput"
+            name="file"
+            type="File"
+          />
           {file && (
             <div
               style={{
@@ -558,7 +674,10 @@ const CSVReader = () => {
             border: "1px dashed orange",
           }}
         >
-          <CSVExporter data={response} file_name={availableOutputFileNames[0]} />
+          <CSVExporter
+            data={response}
+            file_name={availableOutputFileNames[0]}
+          />
         </div>
       )}
       {/* <div style={{ marginTop: "3rem" }}>{error ? error : data.map((col, idx) => <div key={idx}>{col}</div>)}</div> */}
