@@ -217,8 +217,12 @@ const CSVReader = () => {
       // );
 
       const data = await extractTableFromXLSX(file);
-      console.log("[CONSOLE INFO] :  ~ handleFileUpload ~ data:", data);
-      const AIPromptResults = await getResponse(data);
+      const processedData = await processParsedData(data);
+      console.log(
+        "[CONSOLE INFO] :  ~ handleParse ~ processedData:",
+        processedData
+      );
+      const AIPromptResults = await getResponse(processedData);
 
       setFileData(data);
       // setData(jsonData);
