@@ -274,7 +274,8 @@ const CSVReader = () => {
         JSON.stringify(processedData?.map((pd) => pd.Prompt))
       );
       formData.append("supportFile", supportFile);
-      formData.append("batchSize", 10);
+      // formData.append("batchSize", 10);
+      formData.append("batchSize", 5);
 
       // const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", formData);
       // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10, aiSettings);
