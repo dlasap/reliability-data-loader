@@ -35,16 +35,8 @@ To protect personnel from moving parts;Contact with moving parts;Lack of safety 
 const CSVTable = dynamic(() => import("./CSVTable"), { ssr: false });
 
 const CSVReader = () => {
-  const {
-    setItem: setContextItem,
-    getItem: getContextItem,
-    removeItem: removeContextItem,
-  } = useSessionStorage("contextStorage");
-  const {
-    setItem: setIsPersisted,
-    getItem: getIsPersistemItem,
-    removeItem: removePersistedItem,
-  } = useSessionStorage("isPersisted");
+  const { setItem: setContextItem, getItem: getContextItem, removeItem: removeContextItem } = useSessionStorage("contextStorage");
+  const { setItem: setIsPersisted, getItem: getIsPersistemItem, removeItem: removePersistedItem } = useSessionStorage("isPersisted");
 
   const [data, setData] = useState([]);
   const [response, setResponse] = useState("");
@@ -66,6 +58,12 @@ const CSVReader = () => {
   });
 
   const [isSessionRetained, setIsSessionRetained] = useState(false); // eslint-disable-line
+  const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [elapsed, setElapsed] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const handleProgress = (done, total) => {
+    setProgress({ done, total });
+  };
 
   const processParsedData = (data) => {
     const mapped_valid_data = data
@@ -76,16 +74,9 @@ const CSVReader = () => {
         const pattern = /\[(.*?)\]/g;
 
         const variables = d.Prompt.match(pattern);
-        const input_variables = variables.map((variable) =>
-          variable.slice(1, -1)
-        );
+        const input_variables = variables.map((variable) => variable.slice(1, -1));
 
-        let outputStr = replaceValuesInString(
-          d.Prompt,
-          variables,
-          d,
-          input_variables
-        );
+        let outputStr = replaceValuesInString(d.Prompt, variables, d, input_variables);
 
         return {
           ...d,
@@ -146,18 +137,14 @@ const CSVReader = () => {
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
         // 🔍 Find the row that includes "Prompt" and "Inp1"
-        const headerIndex = rows.findIndex((row) =>
-          row.some((cell) => typeof cell === "string" && /prompt/i.test(cell))
-        );
+        const headerIndex = rows.findIndex((row) => row.some((cell) => typeof cell === "string" && /prompt/i.test(cell)));
 
         if (headerIndex === -1) return reject("Header not found");
 
         const headers = rows[headerIndex];
         const dataRows = rows.slice(headerIndex + 1);
 
-        const tableData = dataRows.map((row) =>
-          Object.fromEntries(headers.map((h, i) => [h || `col${i}`, row[i]]))
-        );
+        const tableData = dataRows.map((row) => Object.fromEntries(headers.map((h, i) => [h || `col${i}`, row[i]])));
 
         resolve(tableData);
       };
@@ -218,10 +205,7 @@ const CSVReader = () => {
 
       const data = await extractTableFromXLSX(file);
       const processedData = await processParsedData(data);
-      console.log(
-        "[CONSOLE INFO] :  ~ handleParse ~ processedData:",
-        processedData
-      );
+      console.log("[CONSOLE INFO] :  ~ handleParse ~ processedData:", processedData);
       const AIPromptResults = await getResponse(processedData);
 
       setFileData(data);
@@ -269,10 +253,7 @@ const CSVReader = () => {
       const formData = new FormData();
       formData.append("context", context);
       formData.append("aiSettings", JSON.stringify(aiSettings));
-      formData.append(
-        "prompts",
-        JSON.stringify(processedData?.map((pd) => pd.Prompt))
-      );
+      formData.append("prompts", JSON.stringify(processedData?.map((pd) => pd.Prompt)));
       formData.append("supportFile", supportFile);
       // formData.append("batchSize", 10);
       formData.append("batchSize", 5);
@@ -280,9 +261,18 @@ const CSVReader = () => {
       // const result = await batchApiPostCall("https://reliability-management-backend-five.vercel.app/operating_context_prompts", formData);
       // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", params, 10, aiSettings);
       // const result = await batchApiPostCall("http://localhost:3019/operating_context_prompts", formData);
+
+      setProgress({ done: 0, total: JSON.parse(formData.get("prompts")).length });
+      setElapsed(0);
+      setIsProcessing(true);
+
       const result = await batchApiPostCall(
         "https://reliability-management-backend-five.vercel.app/operating_context_prompts",
-        formData
+        formData,
+        (done, total) => {
+          setProgress({ done, total });
+        },
+        setElapsed
       );
 
       setResponse(result?.data?.map((d) => d?.response).join("\n\n"));
@@ -291,6 +281,7 @@ const CSVReader = () => {
       setError(error);
     } finally {
       setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -303,15 +294,23 @@ const CSVReader = () => {
     });
   };
 
+  const percent = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+
+  useEffect(() => {
+    let interval;
+    if (isProcessing) {
+      interval = setInterval(() => {
+        setElapsed((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isProcessing]);
+
   useEffect(() => {
     if (file && supportFile && !response) getResponse();
     if (JSON.parse(getIsPersistemItem("isPersisted")) !== null) {
       const isPersisted = JSON.parse(getIsPersistemItem("isPersisted"));
-      console.log(
-        "%c  isPersisted:",
-        "color: #0e93e0;background: #aaefe5;",
-        isPersisted
-      );
+      console.log("%c  isPersisted:", "color: #0e93e0;background: #aaefe5;", isPersisted);
       setIsSessionRetained(isPersisted);
     }
     //eslint-disable-next-line
@@ -464,9 +463,7 @@ const CSVReader = () => {
                 type="number"
                 value={aiSettings.temperature}
                 step={0.1}
-                onChange={(e) =>
-                  handleChangeAISettings("temperature", e.target.value)
-                }
+                onChange={(e) => handleChangeAISettings("temperature", e.target.value)}
               />
             </div>
 
@@ -496,9 +493,7 @@ const CSVReader = () => {
                 type="number"
                 value={aiSettings.frequency_penalty}
                 step={0.1}
-                onChange={(e) =>
-                  handleChangeAISettings("frequency_penalty", e.target.value)
-                }
+                onChange={(e) => handleChangeAISettings("frequency_penalty", e.target.value)}
               />
             </div>
 
@@ -529,9 +524,7 @@ const CSVReader = () => {
                 type="number"
                 value={aiSettings.presence_penalty}
                 step={0.1}
-                onChange={(e) =>
-                  handleChangeAISettings("presence_penalty", e.target.value)
-                }
+                onChange={(e) => handleChangeAISettings("presence_penalty", e.target.value)}
               />
             </div>
           </div>
@@ -589,12 +582,36 @@ const CSVReader = () => {
             Enter XLSX File
           </label>
 
-          <input
-            onChange={handleFileChange}
-            id="csvInput"
-            name="file"
-            type="File"
-          />
+          <input onChange={handleFileChange} id="csvInput" name="file" type="File" />
+          {isProcessing && (
+            <>
+              <div
+                style={{
+                  width: "100%",
+                  backgroundColor: "#e0e0e0",
+                  height: "16px",
+                  borderRadius: "8px",
+                  overflow: "hidden",
+                  marginBottom: "8px",
+                  marginTop: "16px",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${percent}%`,
+                    backgroundColor: "#3b82f6",
+                    transition: "width 0.3s ease",
+                  }}
+                />
+              </div>
+
+              <p style={{ fontSize: "14px", margin: "4px 0" }}>
+                {progress.done} / {progress.total} prompts processed
+              </p>
+              <p style={{ fontSize: "14px", margin: "4px 0" }}>Elapsed Time: {elapsed}s</p>
+            </>
+          )}
           {file && (
             <div
               style={{
@@ -679,10 +696,7 @@ const CSVReader = () => {
             border: "1px dashed orange",
           }}
         >
-          <CSVExporter
-            data={response}
-            file_name={availableOutputFileNames[0]}
-          />
+          <CSVExporter data={response} file_name={availableOutputFileNames[0]} />
         </div>
       )}
       {/* <div style={{ marginTop: "3rem" }}>{error ? error : data.map((col, idx) => <div key={idx}>{col}</div>)}</div> */}
