@@ -74,6 +74,13 @@ const CSVReader = () => {
         const pattern = /\[(.*?)\]/g;
 
         const variables = d.Prompt.match(pattern);
+
+        if (!variables)
+          return {
+            ...d,
+            Prompt: d.Prompt,
+          };
+        console.log("%c  variables:", "color: #0e93e0;background: #aaefe5;", variables);
         const input_variables = variables.map((variable) => variable.slice(1, -1));
 
         let outputStr = replaceValuesInString(d.Prompt, variables, d, input_variables);
