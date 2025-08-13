@@ -18,13 +18,22 @@
     "bluebird": "^3.7.2",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.12",
+    "exceljs": "^4.4.0",
     "framer-motion": "^10.16.4",
+    "github-markdown-css": "^5.8.1",
     "next": "^13.4.13",
     "papaparse": "^5.4.1",
     "react": "18.2.0",
     "react-csv": "^2.2.2",
     "react-csv-to-table": "^0.0.4",
     "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.2.1",
+    "typescript": "5.9.2"
   }
 }

@@ -1,4 +1,7 @@
 export default {
+  gpt5: "gpt-5",
+  gpt5Mini: "gpt-5-mini",
+  gpt5Nano: "gpt-5-nano",
   gpt4o: "gpt-4o",
   gpt4oLatest: "chatgpt-4o-latest",
   gpt4oMini: "gpt-4o-mini",

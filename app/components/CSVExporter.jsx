@@ -9,6 +9,7 @@ export const CSVExporter = ({ data = "", file_name = "export" }) => {
 
   // Convert to array of arrays for CSVLink
   const csvArray = processedData.split("\n").map((row) => row.split(",").map((cell) => cell.trim()));
+  console.log("%c  csvArray:", "color: #0e93e0;background: #aaefe5;", { processedData, csvArray });
 
   const downloadTxt = () => {
     const blob = new Blob([processedData], { type: "text/plain;charset=utf-8" });

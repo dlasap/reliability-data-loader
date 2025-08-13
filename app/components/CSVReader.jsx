@@ -19,6 +19,7 @@ import aiModels from "../constants/ai-models";
 
 import dynamic from "next/dynamic";
 import { FormControlLabel, FormGroup } from "@mui/material";
+import XLSXExporter from "./XLSXExporter";
 
 const static_data = `Functions;Failure Modes;Root Causes;Failure Effects;Recommended Tasks
 To provide clean and compressed air to the gas turbine, with a performance standard of maintaining an inlet air temperature below 50°C and a pressure drop across the system below 2% of the total pressure.;Air contamination;Inadequate filtration system;Reduced turbine efficiency, increased wear and tear on turbine components;Regular maintenance and replacement of air filters
@@ -711,6 +712,15 @@ const CSVReader = () => {
         <div>
           <label>GENERATION ERROR:</label>
           {error}
+        </div>
+      )}
+
+      {response && (
+        <div style={{ marginTop: "3rem" }}>
+          <h2 className="" style={{ color: "white" }}>
+            Export to Excel (NEW)
+          </h2>
+          <XLSXExporter data={response} />
         </div>
       )}
     </div>
