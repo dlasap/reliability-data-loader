@@ -1,0 +1,12 @@
+.CSVTable {
+  background: rgb(191, 175, 144);
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid black;
+}
+
+.CSVTable td {
+  border: 1px solid black;
+  padding: 0.5rem;
+  text-align: center;
+}
